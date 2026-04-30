@@ -94,6 +94,30 @@ jobs:
             ~/.cabal/store
             dist-newstyle
 
+      - name: debug zlib helper
+        run: |
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash -c '
+            set -x
+            WORK=$(mktemp -d)
+            cd "$WORK"
+            cabal get zlib-0.7.1.1
+            cd zlib-0.7.1.1
+            cabal build || true
+            HSC=$(find dist-newstyle -name Stream_hsc_make | head -1)
+            echo "=== helper: $HSC ==="
+            echo "=== ldd ==="
+            ldd "$HSC" || true
+            echo "=== readelf NEEDED + RUNPATH ==="
+            readelf -d "$HSC" | grep -E "NEEDED|RUNPATH" || true
+            echo "=== LD_LIBRARY_PATH ==="
+            echo "$LD_LIBRARY_PATH" | tr ":" "\n"
+            echo "=== pkg-config zlib ==="
+            pkg-config --libs --cflags zlib || true
+            pkg-config --variable=pcfiledir zlib || true
+            echo "=== LD_DEBUG=libs run ==="
+            LD_DEBUG=libs "$HSC" 2>&1 | tail -120 || true
+          '
+
       - name: cabal build core
         run: |
           nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
