@@ -98,8 +98,8 @@ jobs:
         run: |
           nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash -c '
             set -x
-            echo "=== LD_LIBRARY_PATH (should now be empty) ==="
-            echo "${LD_LIBRARY_PATH:-<unset>}"
+            echo "=== LD_LIBRARY_PATH (should only contain zstd) ==="
+            echo "${LD_LIBRARY_PATH:-<unset>}" | tr ":" "\n"
             WORK=$(mktemp -d)
             cd "$WORK"
             cabal get zlib-0.7.1.1
