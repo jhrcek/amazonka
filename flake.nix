@@ -64,6 +64,7 @@
             pkgs.gmp
             pkgs.ncurses
             pkgs.zlib
+            pkgs.zstd
 
             # Development Tools
             pkgs.haskellPackages.cabal-fmt
