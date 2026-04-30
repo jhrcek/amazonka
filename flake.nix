@@ -62,6 +62,7 @@
 
             # Package Dependencies
             pkgs.bzip2
+            pkgs.elfutils
             pkgs.gmp
             pkgs.ncurses
             pkgs.xz
@@ -84,7 +85,8 @@
           shellHook = pre-commit.shellHook + ''
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
-            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.zstd pkgs.xz pkgs.bzip2 ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+            export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" [ pkgs.bzip2.dev pkgs.elfutils.dev pkgs.xz.dev pkgs.zlib.dev pkgs.zstd.dev ]}
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.bzip2 pkgs.elfutils pkgs.gmp pkgs.ncurses pkgs.xz pkgs.zlib pkgs.zstd ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
           '';
         };
 
