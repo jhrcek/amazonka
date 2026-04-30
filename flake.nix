@@ -61,8 +61,10 @@
             pkgs.cabal-install
 
             # Package Dependencies
+            pkgs.bzip2
             pkgs.gmp
             pkgs.ncurses
+            pkgs.xz
             pkgs.zlib
             pkgs.zstd
 
@@ -82,6 +84,7 @@
           shellHook = pre-commit.shellHook + ''
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.bzip2 pkgs.gmp pkgs.ncurses pkgs.xz pkgs.zlib pkgs.zstd ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
           '';
         };
 
