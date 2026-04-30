@@ -84,7 +84,7 @@
           shellHook = pre-commit.shellHook + ''
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
-            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.zstd pkgs.xz ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.zstd pkgs.xz pkgs.bzip2 ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
           '';
         };
 
