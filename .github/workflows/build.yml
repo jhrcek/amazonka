@@ -82,8 +82,8 @@ jobs:
 
       - name: cabal update && cabal freeze
         run: |
-          nix develop --print-build-logs --command \
-              bash -c 'cabal update && cabal freeze' '.#${{matrix.ghc}}'
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
+              bash -c 'cabal update && cabal freeze'
 
       - uses: actions/cache@v5
         with:
@@ -96,15 +96,15 @@ jobs:
 
       - name: cabal build core
         run: |
-          nix develop --print-build-logs --command \
-              bash -c 'cabal build amazonka-core amazonka' '.#${{matrix.ghc}}'
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
+              bash -c 'cabal build amazonka-core amazonka'
 
       - name: cabal build s3-encryption
         run: |
-          nix develop --print-build-logs --command \
-              bash -c 'cabal build amazonka-s3-encryption' '.#${{matrix.ghc}}'
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
+              bash -c 'cabal build amazonka-s3-encryption'
 
       - name: cabal build all
         run: |
-          nix develop --print-build-logs --command \
-              bash -c 'cabal test all' '.#${{matrix.ghc}}'
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
+              bash -c 'cabal test all'
