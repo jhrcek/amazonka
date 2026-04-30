@@ -6,13 +6,13 @@ concurrency:
 
 on:
   pull_request:
-    branches: main
+    branches: [ main ]
     types:
       - opened
       - synchronize
 
   push:
-    branches: main
+    branches: [ main ]
     paths-ignore:
       - "configs/**"
       - "scripts/**"
@@ -23,9 +23,6 @@ on:
 
 jobs:
   amazonka-gen:
-    strategy:
-      fail-fast: false
-
     runs-on: ubuntu-latest
 
     steps:
