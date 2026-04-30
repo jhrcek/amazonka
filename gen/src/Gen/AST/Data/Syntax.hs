@@ -832,7 +832,7 @@ requestF c meta h r is =
     m = h ^. method
     p = meta ^. protocol
 
--- FIXME: take method into account for responses, such as HEAD etc, particuarly
+-- FIXME: take method into account for responses, such as HEAD etc, particularly
 -- when the body might be totally empty.
 responseF :: Protocol -> RefF a -> [Field] -> Exp
 responseF p r fs

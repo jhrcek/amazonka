@@ -293,7 +293,7 @@ localName = \case
   NodeElement e -> Just (nameLocalName (elementName e))
   _ -> Nothing
 
--- | An inefficient mechanism for retreiving the root
+-- | An inefficient mechanism for retrieving the root
 -- element name of an XML document.
 rootElementName :: ByteStringLazy -> Maybe Text
 rootElementName bs =

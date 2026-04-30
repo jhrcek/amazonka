@@ -32,7 +32,7 @@ v4 = Signer sign presign
 -- |
 -- Presigns a URL according to the AWS Request Signature V4 spec <https://docs.aws.amazon.com/general/latest/gr/sigv4_signing.html>.
 -- In the case that the URL contains a payload that is not signed when sending requests to Amazon S3, a literal `UNSIGNED-PAYLOAD`
--- must be included when constructing the cannonical request. See <https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html>
+-- must be included when constructing the canonical request. See <https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html>
 -- In the edge case that the request body is a @Amazonka.Data.Body.ChunkedBody@ we will also use the `UNSIGNED-PAYLOAD` literal as we won't consume the stream
 -- to hash it.
 presign :: Seconds -> Algorithm a

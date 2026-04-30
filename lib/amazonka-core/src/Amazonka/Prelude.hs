@@ -9,7 +9,7 @@
 -- An intentionally limited set of prelude exports to control backward
 -- compatibility and simplify code generation.
 --
--- Please consider long and hard before adding any addtional types exports to
+-- Please consider long and hard before adding any additional types exports to
 -- this module - they should either be in pervasive use throughout the project
 -- or have zero ambiguity. If you ever are forced to disambiguate at any point,
 -- it's a bad export.

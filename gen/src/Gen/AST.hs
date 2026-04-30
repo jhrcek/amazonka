@@ -87,7 +87,7 @@ rewriteService ::
 rewriteService cfg s = do
   -- Determine which direction (input, output, or both) shapes are used.
   rs <- relations (s ^. operations) (s ^. shapes)
-  -- Elaborate the shape map into a comonadic strucutre for traversing.
+  -- Elaborate the shape map into a comonadic structure for traversing.
   elaborate (s ^. shapes)
     -- Annotate the comonadic tree with the associated
     -- bi/unidirectional (input/output/both) relation for shapes.

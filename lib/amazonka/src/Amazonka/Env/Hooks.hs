@@ -19,7 +19,7 @@
 --   (see 'requestHook');
 --
 --   @
---   {-# LANGAUGE OverloadedLabels, ScopedTypeVariables, TypeApplications #-}
+--   {-# LANGUAGE OverloadedLabels, ScopedTypeVariables, TypeApplications #-}
 --   import Amazonka
 --   import Amazonka.Env.Hooks
 --   import Data.Generics.Labels ()
@@ -45,7 +45,7 @@
 --   (see 'configuredRequestHook'); and
 --
 --   @
---   {-# LANGAUGE OverloadedLabels #-}
+--   {-# LANGUAGE OverloadedLabels #-}
 --   import Amazonka
 --   import Amazonka.Env.Hooks
 --   import Data.Generics.Labels ()
@@ -67,7 +67,7 @@
 --   @ConditionalCheckFailedException@ ('errorHook' and 'silenceError')
 --
 --   @
---   {-# LANGAUGE OverloadedLabels #-}
+--   {-# LANGUAGE OverloadedLabels #-}
 --   import Amazonka
 --   import Amazonka.Env.Hooks
 --   import qualified Amazonka.DynamoDB as DynamoDB
@@ -776,7 +776,7 @@ removeAwaitRetryHooksFor ::
 removeAwaitRetryHooksFor =
   removeHooksFor_ @(Request a, Wait a, Accept, Retry.RetryStatus)
 
--- | Add a repsonse hook for every AWS request type. Designed to be
+-- | Add a response hook for every AWS request type. Designed to be
 -- used with 'responseHook'.
 --
 -- @since 2.1
@@ -787,7 +787,7 @@ addResponseHook ::
   Hook_ (Request a, ClientResponse (AWSResponse a))
 addResponseHook = addHook_
 
--- | Add a repsonse hook for one specific AWS request type. Designed
+-- | Add a response hook for one specific AWS request type. Designed
 -- to be used with 'responseHook'.
 --
 -- @since 2.1

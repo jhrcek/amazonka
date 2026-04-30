@@ -132,7 +132,7 @@ Released: **28 July 2023**, Compare: [2.0.0-rc2](https://github.com/brendanhay/a
   - The functions `Amazonka.dynamic`, `Amazonka.metadata` and `Amazonka.userdata` have been removed in favour of their equivalents in `Amazonka.EC2.Metadata` which only require a HTTP `Manager`, not an entire `Env`.
   - It is easy to share a single `Manager` between metadata requests and an Amazonka `Env`:
     - If you create the `Env` first, you can read its `manager :: Manager` field.
-    - If you make metadata requests before calling `newEnv`, you must create a `Manager` youself. You can pass this `Manager` to `newEnvFromManager`.
+    - If you make metadata requests before calling `newEnv`, you must create a `Manager` yourself. You can pass this `Manager` to `newEnvFromManager`.
 
 ### Fixed
 
@@ -175,7 +175,7 @@ Released: **10th July, 2023**, Compare: [2.0.0-rc1](https://github.com/brendanha
     | `FromWebIdentity` | `fromWebIdentityEnv`         | None - reads `AWS_WEB_IDENTITY_TOKEN_FILE`, `AWS_ROLE_ARN`, and `AWS_ROLE_SESSION_NAME`.                                                                                                                                                                |
     |                   | `fromContainer`              | `Text` (absolute url to query the ECS Container Agent).                                                                                                                                                                                                 |
     | `FromContainer`   | `fromContainerEnv`           | None - reads `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI`.                                                                                                                                                                                                  |
-    | `Discover`        | `discover`                   | A rough mimic of the offical SDK, trying several methods in sequence.                                                                                                                                                                                   |
+    | `Discover`        | `discover`                   | A rough mimic of the official SDK, trying several methods in sequence.                                                                                                                                                                                   |
 
   - The `Amazonka.Auth.runCredentialChain` function allows you to build your own custom credential chains.
 
@@ -415,7 +415,7 @@ perl -pi -e 's/Network\.AWS/Amazonka/g' `find . -type f -name '*.hs'`
 [\#622](https://github.com/brendanhay/amazonka/pull/622)
 - Add `x-amz-glacier-version` to glacier headers (and extend generator to let `operationPlugins` support wildcards)
 [\#623](https://github.com/brendanhay/amazonka/pull/623)
-- Add required fields for Glacier multipart uploade
+- Add required fields for Glacier multipart upload
 [\#624](https://github.com/brendanhay/amazonka/pull/624)
 - If nonstandard ports are used, include them in signed host header
 [\#625](https://github.com/brendanhay/amazonka/pull/625)
@@ -834,7 +834,7 @@ Released: **09 June, 2016**, Compare: [1.4.2](https://github.com/brendanhay/amaz
 ### Changed
 
 - Documentation is now formatted more consistently at the expense of longer line columns.
-- `POSIX` timestamps no longer have unecessary (and misleading) Text/XML instances.
+- `POSIX` timestamps no longer have unnecessary (and misleading) Text/XML instances.
 
 
 ## [1.4.2](https://github.com/brendanhay/amazonka/tree/1.4.2)
@@ -1005,7 +1005,7 @@ Released: **18 December, 2015**, Compare: [1.3.6](https://github.com/brendanhay/
 - IAM: Additional resource types, documentation updates.
 - IoT: Added `RegisterCertificate` operation.
 - KMS: Updated service definition.
-- RDS: Add enchanced monitoring support, documentation updates.
+- RDS: Add enhanced monitoring support, documentation updates.
 - Route53: Updated service definition.
 - SSM: Updated service definition.
 

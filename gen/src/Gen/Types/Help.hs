@@ -27,7 +27,7 @@ instance FromJSON Help where
   parseJSON = Aeson.withText "Help" (pure . Help . convertHaddock)
 
 instance ToJSON Help where
-  -- Note the wierd templating behaviour of first line is unprefixed,
+  -- Note the weird templating behaviour of first line is unprefixed,
   -- with the remainder being haddock prefixed with "--".
   toJSON =
     Aeson.toJSON

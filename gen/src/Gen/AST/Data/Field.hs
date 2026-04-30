@@ -24,7 +24,7 @@ data Field = Field
     _fieldRef :: Ref,
     -- | Does the struct have this member in the required set.
     _fieldRequire :: Bool,
-    -- | Does the struct have this memeber marked as the payload.
+    -- | Does the struct have this member marked as the payload.
     _fieldPayload :: Bool,
     _fieldPrefix :: Maybe Text,
     _fieldNamespace :: Maybe Text,

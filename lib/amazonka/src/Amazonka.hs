@@ -203,7 +203,7 @@ import Control.Monad.Trans.Resource (runResourceT)
 --     -- the contents of the file is enumerated exactly once, during send:
 --     body <- AWS.chunkedFile AWS.defaultChunkSize "local\/path\/to\/object-payload"
 --
---     -- We now run the 'AWS' computation with the overriden logger, performing the
+--     -- We now run the 'AWS' computation with the overridden logger, performing the
 --     -- 'PutObject' request.
 --     AWS.runResourceT $
 --         AWS.'Amazonka.send' env (S3.newPutObject "bucket-name" "object-key" body)
