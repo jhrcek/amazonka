@@ -98,13 +98,24 @@ jobs:
         run: |
           nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash -c '
             set -x
-            echo "=== LD_LIBRARY_PATH (should only contain zstd) ==="
+            echo "=== LD_LIBRARY_PATH ==="
             echo "${LD_LIBRARY_PATH:-<unset>}" | tr ":" "\n"
             WORK=$(mktemp -d)
             cd "$WORK"
             cabal get zlib-0.7.1.1
             cd zlib-0.7.1.1
-            cabal build && echo "SUCCESS" || echo "FAILED"
+            cabal build 2>&1 || true
+            HSC=$(find dist-newstyle -name Stream_hsc_make 2>/dev/null | head -1)
+            if [ -n "$HSC" ]; then
+              echo "=== ldd ==="
+              ldd "$HSC" || true
+              echo "=== readelf NEEDED + RUNPATH ==="
+              readelf -d "$HSC" | grep -E "NEEDED|RUNPATH" || true
+              echo "=== LD_DEBUG=libs run ==="
+              LD_DEBUG=libs "$HSC" 2>&1 | tail -50 || true
+            else
+              echo "Stream_hsc_make not found"
+            fi
           '
 
       - name: cabal build core
