@@ -187,8 +187,8 @@ instance FromJSON AWSTime where
 instance FromJSON BasicTime where
   parseJSON = parseJSONText "BasicTime"
 
--- This is a somewhat unfortunate hack to support the bizzare apigateway
--- occurence of returning ISO8601 or POSIX timestamps in unknown scenarios.
+-- This is a somewhat unfortunate hack to support the bizarre apigateway
+-- occurrence of returning ISO8601 or POSIX timestamps in unknown scenarios.
 --
 -- See: https://github.com/brendanhay/amazonka/issues/291
 instance FromJSON POSIX where

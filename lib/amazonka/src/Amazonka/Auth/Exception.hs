@@ -46,7 +46,7 @@ class AsAuthError a where
 
   {-# MINIMAL _AuthError #-}
 
-  -- | An error occured while communicating over HTTP with
+  -- | An error occurred while communicating over HTTP with
   -- the local metadata endpoint.
   _RetrievalError :: Prism' a HttpException
 
@@ -56,7 +56,7 @@ class AsAuthError a where
   -- | The specified credentials file could not be found.
   _MissingFileError :: Prism' a FilePath
 
-  -- | An error occured parsing the credentials file.
+  -- | An error occurred parsing the credentials file.
   _InvalidFileError :: Prism' a Text
 
   -- | The specified IAM profile could not be found or deserialised.

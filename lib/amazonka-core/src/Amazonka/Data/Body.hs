@@ -43,7 +43,7 @@ getFileSize path = liftIO (IO.withBinaryFile path IO.ReadMode IO.hFileSize)
 
 -- | A streaming, exception safe response body.
 --
--- @newtype@ for show/orhpan instance purposes.
+-- @newtype@ for show/orphan instance purposes.
 newtype ResponseBody = ResponseBody
   {body :: ConduitM () ByteString (ResourceT IO) ()}
   deriving stock (Generic)

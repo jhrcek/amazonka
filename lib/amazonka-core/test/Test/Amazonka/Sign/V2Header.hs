@@ -40,7 +40,7 @@ tests =
           testCase "should keep a list of Nothing QValues" $
             constructSigningQuery (QList [QValue Nothing]) @?= QList [QValue Nothing],
           testProperty
-            "should discard the contents of an unintersting QList"
+            "should discard the contents of an uninteresting QList"
             prop_UninterestingQLists,
           testProperty
             "should not discard all QC.elements in interesting QLists"

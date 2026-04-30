@@ -203,7 +203,7 @@ import Network.HTTP.Types.Status (Status)
 type ClientRequest = Client.Request
 
 -- | Construct a 'ClientRequest' using common parameters such as TLS and prevent
--- throwing errors when receiving erroneous status codes in respones.
+-- throwing errors when receiving erroneous status codes in responses.
 newClientRequest :: Endpoint -> Maybe Seconds -> ClientRequest
 newClientRequest Endpoint {host, secure, port} timeout =
   Client.defaultRequest
@@ -389,10 +389,10 @@ class AsError a where
 
   {-# MINIMAL _Error #-}
 
-  -- | An error occured while communicating over HTTP with a remote service.
+  -- | An error occurred while communicating over HTTP with a remote service.
   _TransportError :: Prism' a Client.HttpException
 
-  -- | A serialisation error occured when attempting to deserialise a response.
+  -- | A serialisation error occurred when attempting to deserialise a response.
   _SerializeError :: Prism' a SerializeError
 
   -- | A service specific error returned by the remote service.

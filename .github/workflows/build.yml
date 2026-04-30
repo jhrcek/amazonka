@@ -6,13 +6,13 @@ concurrency:
 
 on:
   pull_request:
-    branches: main
+    branches: [ main ]
     types:
       - opened
       - synchronize
 
   push:
-    branches: main
+    branches: [ main ]
     paths-ignore:
       - "configs/**"
       - "scripts/**"
@@ -23,13 +23,10 @@ on:
 
 jobs:
   amazonka-gen:
-    strategy:
-      fail-fast: false
-
     runs-on: ubuntu-latest
 
     steps:
-      - uses: cachix/install-nix-action@v22
+      - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
@@ -37,12 +34,12 @@ jobs:
             extra-substituters = https://cache.iog.io
             experimental-features = nix-command flakes
 
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v17
         with:
           name: amazonka
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - run: nix build
 
@@ -68,7 +65,7 @@ jobs:
         run: |-
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt &
 
-      - uses: cachix/install-nix-action@v22
+      - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
@@ -76,19 +73,19 @@ jobs:
             extra-substituters = https://cache.iog.io
             experimental-features = nix-command flakes
 
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v17
         with:
           name: amazonka
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: cabal update && cabal freeze
         run: |
-          nix develop --print-build-logs --command \
-              bash -c 'cabal update && cabal freeze' '.#${{matrix.ghc}}'
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
+              bash -c 'cabal update && cabal freeze'
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           key: v1-${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
           restore-keys: |
@@ -97,17 +94,41 @@ jobs:
             ~/.cabal/store
             dist-newstyle
 
+      - name: debug zlib helper
+        run: |
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash -c '
+            set -x
+            echo "=== LD_LIBRARY_PATH ==="
+            echo "${LD_LIBRARY_PATH:-<unset>}" | tr ":" "\n"
+            WORK=$(mktemp -d)
+            cd "$WORK"
+            cabal get zlib-0.7.1.1
+            cd zlib-0.7.1.1
+            cabal build 2>&1 || true
+            HSC=$(find dist-newstyle -name Stream_hsc_make 2>/dev/null | head -1)
+            if [ -n "$HSC" ]; then
+              echo "=== ldd ==="
+              ldd "$HSC" || true
+              echo "=== readelf NEEDED + RUNPATH ==="
+              readelf -d "$HSC" | grep -E "NEEDED|RUNPATH" || true
+              echo "=== LD_DEBUG=libs run ==="
+              LD_DEBUG=libs "$HSC" 2>&1 | tail -50 || true
+            else
+              echo "Stream_hsc_make not found"
+            fi
+          '
+
       - name: cabal build core
         run: |
-          nix develop --print-build-logs --command \
-              bash -c 'cabal build amazonka-core amazonka' '.#${{matrix.ghc}}'
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
+              bash -c 'cabal build amazonka-core amazonka'
 
       - name: cabal build s3-encryption
         run: |
-          nix develop --print-build-logs --command \
-              bash -c 'cabal build amazonka-s3-encryption' '.#${{matrix.ghc}}'
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
+              bash -c 'cabal build amazonka-s3-encryption'
 
       - name: cabal build all
         run: |
-          nix develop --print-build-logs --command \
-              bash -c 'cabal test all' '.#${{matrix.ghc}}'
+          nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
+              bash -c 'cabal test all'

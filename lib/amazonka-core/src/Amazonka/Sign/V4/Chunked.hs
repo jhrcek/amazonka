@@ -99,7 +99,7 @@ metadataLength :: ChunkedBody -> Integer
 metadataLength c =
   -- Number of full sized chunks.
   fullChunks c * chunkLength (size c)
-    -- Non-full chunk preceeding the final chunk.
+    -- Non-full chunk preceding the final chunk.
     + maybe 0 chunkLength (remainderBytes c)
     -- The final empty chunk.
     + chunkLength (0 :: Integer)

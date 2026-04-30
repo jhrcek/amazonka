@@ -69,7 +69,7 @@ isNFData = elem DNFData . derivingOf
 
 -- FIXME: this whole concept of pointers and limiting the recursion stack
 -- when calculating types is broken - there are plenty of more robust/sane
--- ways to acheive this, revisit.
+-- ways to achieve this, revisit.
 pointerTo :: Id -> ShapeF a -> TType
 pointerTo n = \case
   List (ListF i e)
