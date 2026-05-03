@@ -61,12 +61,9 @@
             pkgs.cabal-install
 
             # Package Dependencies
-            pkgs.bzip2
             pkgs.gmp
             pkgs.ncurses
-            pkgs.xz
             pkgs.zlib
-            pkgs.zstd
 
             # Development Tools
             pkgs.haskellPackages.cabal-fmt
@@ -84,8 +81,8 @@
           shellHook = pre-commit.shellHook + ''
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
-            export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" [ pkgs.bzip2.dev pkgs.xz.dev pkgs.zlib.dev pkgs.zstd.dev ]}
-            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.bzip2 pkgs.gmp pkgs.ncurses pkgs.xz pkgs.zlib pkgs.zstd ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+            export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" [ pkgs.zlib.dev ]}
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.gmp pkgs.ncurses pkgs.zlib ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
           '';
         };
 
