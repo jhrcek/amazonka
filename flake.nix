@@ -64,6 +64,10 @@
             pkgs.gmp
             pkgs.ncurses
             pkgs.zlib
+            # Required so that binaries linked through cc-wrapper inside this
+            # shell (e.g. hsc2hs probes) can resolve libdw/libelf, which GHC's
+            # own libraries DT_NEEDED.
+            pkgs.elfutils
 
             # Development Tools
             pkgs.haskellPackages.cabal-fmt
