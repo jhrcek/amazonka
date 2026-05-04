@@ -61,9 +61,12 @@
             pkgs.cabal-install
 
             # Package Dependencies
+            pkgs.bzip2
             pkgs.gmp
             pkgs.ncurses
+            pkgs.xz
             pkgs.zlib
+            pkgs.zstd
 
             # Development Tools
             pkgs.haskellPackages.cabal-fmt
@@ -76,42 +79,34 @@
             pkgs.gh
 
             pkgs.parallel
-          ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
-            # On Linux, listing these in buildInputs is empirically required
-            # for cabal's zlib hsc2hs probe to compile to a binary that
-            # doesn't trip glibc's stack-protector canary. Their absence
-            # changes some compile-time flag/setup-hook in a way we haven't
-            # fully diagnosed; restoring them avoids the *** stack smashing
-            # detected *** abort on Ubuntu CI runners.
-            pkgs.zstd
-            pkgs.bzip2
-            pkgs.xz
           ];
 
           shellHook = pre-commit.shellHook + ''
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
           '' + pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-            # On Linux, pkgs.mkShell's NIX_LDFLAGS contributes -L flags
-            # for buildInputs but no useful -rpath, so binaries linked
-            # inside this shell have no DT_RUNPATH covering the nix
-            # store and the loader cannot find their dependencies at
-            # runtime (e.g. cabal's zlib hsc2hs probe failing with
-            # "libzstd.so.1: cannot open"). LD_RUN_PATH is ignored when
-            # the link line already contains any -rpath flag (which
-            # cc-wrapper supplies), so we set LD_LIBRARY_PATH instead.
-            # macOS uses a different mechanism (install_name / DYLD)
-            # and GHC link chain there has no libdw/libelf, so this is
-            # Linux-only.
+            # pkgs.mkShell does not reliably propagate the .dev outputs of
+            # buildInputs into PKG_CONFIG_PATH, nor does it inject -rpath
+            # entries for the closure into NIX_LDFLAGS. Without these two
+            # exports cabal's zlib hsc2hs probe either compiles against
+            # mismatched headers (causing *** stack smashing detected ***
+            # at run time) or links a binary whose loader cannot find
+            # libzstd.so.1 in the nix store. macOS uses install_name /
+            # DYLD and a different GHC link chain, so this is Linux-only.
+            export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" [
+              pkgs.bzip2.dev
+              pkgs.xz.dev
+              pkgs.zlib.dev
+              pkgs.zstd.dev
+            ]}
             export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
+              pkgs.bzip2
               pkgs.gmp
               pkgs.ncurses
-              pkgs.zlib
-              pkgs.elfutils
-              pkgs.zstd
-              pkgs.bzip2
               pkgs.xz
-            ]}
+              pkgs.zlib
+              pkgs.zstd
+            ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
           '';
         };
 
