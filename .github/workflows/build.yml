@@ -96,21 +96,22 @@ jobs:
             ~/.cabal/store
             dist-newstyle
 
-      # Verifies that every Linux-only flake.nix change for the dev shell is
-      # individually load-bearing. Builds zlib-0.7.1.1 in isolation under
-      # four configurations:
-      #   1. full env       -> must succeed (sanity)
+      # Verifies that every Linux-only dev-shell change in flake.nix is
+      # individually load-bearing. Builds zlib-0.7.1.1 in-place via its own
+      # Setup.hs (which bypasses cabal's package store, so each case really
+      # re-runs hsc2hs and re-links the probe) under four env mutations:
+      #   1. full env              -> must succeed
       #   2. LD_LIBRARY_PATH unset -> must fail (libzstd.so.1 unresolvable)
       #   3. PKG_CONFIG_PATH unset -> must fail (header/runtime mismatch
       #                              triggers stack-protector canary)
-      #   4. both unset     -> must fail
-      # If any "must fail" case accidentally succeeds, the step fails the
-      # build so we notice the redundancy and can remove it.
+      #   4. both unset            -> must fail
+      # If any "must fail" case accidentally succeeds, this step fails the
+      # workflow so we notice the redundancy and can remove the env var.
       - name: verify dev-shell env vars are each required
         if: runner.os == 'Linux'
         run: |
           nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash <<'OUTER'
-          set -u
+          set -eu
           WORK=$(mktemp -d)
           cd "$WORK"
           cabal get zlib-0.7.1.1 >/dev/null
@@ -118,29 +119,30 @@ jobs:
 
           run_case () {
             local label=$1 expect=$2 ; shift 2
-            rm -rf dist-newstyle
-            local log
-            log=$(mktemp)
+            rm -rf dist
             echo "===== $label ====="
-            ( "$@" cabal build --offline 2>&1 ) > "$log" || true
-            local outcome=ok
-            grep -qE 'stack smashing detected|libzstd\.so\.1: cannot open' "$log" && outcome=fail
-            grep -qE '^Linking ' "$log" || outcome=${outcome:-fail}
-            grep -q 'Failed to build zlib' "$log" && outcome=fail
-            echo "outcome=$outcome (expected=$expect)"
-            if [ "$outcome" != "$expect" ]; then
+            local actual=ok log
+            log=$(mktemp)
+            if "$@" runghc Setup.hs configure --user >>"$log" 2>&1 \
+               && "$@" runghc Setup.hs build      >>"$log" 2>&1 ; then
+              actual=ok
+            else
+              actual=fail
+            fi
+            echo "outcome=$actual (expected=$expect)"
+            if [ "$actual" != "$expect" ]; then
               echo "------ tail of build log ------"
-              tail -40 "$log"
+              tail -60 "$log"
               echo "------"
-              echo "FAIL: $label expected $expect but got $outcome"
+              echo "FAIL: $label expected $expect but got $actual"
               return 1
             fi
           }
 
-          run_case "1. full env (must succeed)" ok env
-          run_case "2. LD_LIBRARY_PATH unset (must fail)" fail env -u LD_LIBRARY_PATH
-          run_case "3. PKG_CONFIG_PATH unset (must fail)" fail env -u PKG_CONFIG_PATH
-          run_case "4. both unset (must fail)" fail env -u LD_LIBRARY_PATH -u PKG_CONFIG_PATH
+          run_case "1. full env (must succeed)"                  ok   env
+          run_case "2. LD_LIBRARY_PATH unset (must fail)"        fail env -u LD_LIBRARY_PATH
+          run_case "3. PKG_CONFIG_PATH unset (must fail)"        fail env -u PKG_CONFIG_PATH
+          run_case "4. both unset (must fail)"                   fail env -u LD_LIBRARY_PATH -u PKG_CONFIG_PATH
           OUTER
 
       - name: cabal build core
