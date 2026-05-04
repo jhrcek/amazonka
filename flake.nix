@@ -61,12 +61,9 @@
             pkgs.cabal-install
 
             # Package Dependencies
-            pkgs.bzip2
             pkgs.gmp
             pkgs.ncurses
-            pkgs.xz
             pkgs.zlib
-            pkgs.zstd
 
             # Development Tools
             pkgs.haskellPackages.cabal-fmt
@@ -119,10 +116,7 @@
             # and has no equivalent system/nix zlib clash, so this is
             # Linux-only.
             export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" [
-              pkgs.bzip2.dev
-              pkgs.xz.dev
               pkgs.zlib.dev
-              pkgs.zstd.dev
             ]}
           '';
         };
