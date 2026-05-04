@@ -82,17 +82,18 @@
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
           '' + pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-            # On Linux, pkgs.mkShell's NIX_LDFLAGS only contributes -L
-            # (link-time) flags for buildInputs, not -Wl,-rpath, so
-            # binaries linked inside this shell end up with an empty
-            # DT_RUNPATH and the loader cannot find their nix-store
-            # dependencies at runtime (e.g. cabal's zlib hsc2hs probe
-            # failing with "libzstd.so.1: cannot open"). LD_RUN_PATH is
-            # read by ld and embedded as DT_RUNPATH on each linked
-            # binary, so the loader can walk the chain. macOS uses a
-            # different mechanism (install_name / DYLD) and a different
-            # GHC link chain (no libdw/libelf), so this is Linux-only.
-            export LD_RUN_PATH=${pkgs.lib.makeLibraryPath [
+            # On Linux, pkgs.mkShell's NIX_LDFLAGS contributes -L flags
+            # for buildInputs but no useful -rpath, so binaries linked
+            # inside this shell have no DT_RUNPATH covering the nix
+            # store and the loader cannot find their dependencies at
+            # runtime (e.g. cabal's zlib hsc2hs probe failing with
+            # "libzstd.so.1: cannot open"). LD_RUN_PATH is ignored when
+            # the link line already contains any -rpath flag (which
+            # cc-wrapper supplies), so we set LD_LIBRARY_PATH instead.
+            # macOS uses a different mechanism (install_name / DYLD)
+            # and GHC link chain there has no libdw/libelf, so this is
+            # Linux-only.
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
               pkgs.gmp
               pkgs.ncurses
               pkgs.zlib
