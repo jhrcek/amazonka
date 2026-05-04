@@ -120,19 +120,19 @@ jobs:
           export CABAL_DIR="$WORK/cabal-dir"
           cd "$WORK"
           mkdir -p probe && cd probe
-          cat > probe.cabal <<'EOF'
-          cabal-version: 2.0
-          name: probe
-          version: 0.1
-          build-type: Simple
-          library
-            build-depends: base, zlib
-            default-language: Haskell2010
-          EOF
-          cat > cabal.project <<'EOF'
-          packages: .
-          constraints: zlib == 0.7.1.1
-          EOF
+          printf '%s\n' \
+            'cabal-version: 2.0' \
+            'name: probe' \
+            'version: 0.1' \
+            'build-type: Simple' \
+            'library' \
+            '  build-depends: base, zlib' \
+            '  default-language: Haskell2010' \
+            > probe.cabal
+          printf '%s\n' \
+            'packages: .' \
+            'constraints: zlib == 0.7.1.1' \
+            > cabal.project
           cabal update >/dev/null
 
           # Pre-warm: full env, populates CABAL_DIR with hsc2hs and zlib.
