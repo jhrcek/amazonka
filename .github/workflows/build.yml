@@ -112,23 +112,49 @@ jobs:
         run: |
           nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash <<'OUTER'
           set -eu
+
+          # Build a throwaway 1-line library that depends on zlib-0.7.1.1
+          # via cabal new-build (the same code path the real CI uses), so
+          # the probe is linked exactly the way it is in production.
           WORK=$(mktemp -d)
+          export CABAL_DIR="$WORK/cabal-dir"
           cd "$WORK"
-          cabal get zlib-0.7.1.1 >/dev/null
-          cd zlib-0.7.1.1
-          # zlib-0.7.1.1 has build-type: Simple and ships no Setup.hs;
-          # cabal normally synthesises one at install time. Write the
-          # default one ourselves so runghc Setup.hs works.
-          [ -f Setup.hs ] || printf 'import Distribution.Simple\nmain = defaultMain\n' > Setup.hs
+          mkdir -p probe && cd probe
+          cat > probe.cabal <<'EOF'
+          cabal-version: 2.0
+          name: probe
+          version: 0.1
+          build-type: Simple
+          library
+            build-depends: base, zlib
+            default-language: Haskell2010
+          EOF
+          cat > cabal.project <<'EOF'
+          packages: .
+          constraints: zlib == 0.7.1.1
+          EOF
+          cabal update >/dev/null
+
+          # Pre-warm: full env, populates CABAL_DIR with hsc2hs and zlib.
+          # If this fails, the rest of the test is meaningless.
+          cabal build >/dev/null
+
+          zap_zlib_from_store () {
+            rm -rf dist-newstyle
+            # Remove any zlib-0.7.1.1-* package-id directory from the store
+            # so the next cabal build genuinely re-runs hsc2hs and re-links
+            # the probe rather than reusing a cached store entry.
+            find "$CABAL_DIR/store" -maxdepth 4 -type d -name 'zlib-0.7.1.1-*' \
+              -exec chmod -R +w {} + -exec rm -rf {} + 2>/dev/null || true
+          }
 
           run_case () {
             local label=$1 expect=$2 ; shift 2
-            rm -rf dist
+            zap_zlib_from_store
             echo "===== $label ====="
             local actual=ok log
             log=$(mktemp)
-            if "$@" runghc Setup.hs configure --user >>"$log" 2>&1 \
-               && "$@" runghc Setup.hs build      >>"$log" 2>&1 ; then
+            if "$@" cabal build >>"$log" 2>&1 ; then
               actual=ok
             else
               actual=fail
