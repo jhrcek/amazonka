@@ -112,6 +112,39 @@ jobs:
           nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash <<'OUTER'
           set -eu
 
+          # ---- Prove the runner has a competing system zlib ----------------
+          # This is the empirical evidence behind the PKG_CONFIG_PATH comment
+          # in flake.nix. We require that:
+          #   (a) the runner has a system zlib.pc on dpkg's books, and
+          #   (b) without our PKG_CONFIG_PATH, pkg-config resolves zlib to
+          #       /usr/... (the system zlib1g-dev), not to /nix/store.
+          # If either ever stops being true (e.g. the GitHub Ubuntu image
+          # drops zlib1g-dev), this step fails and we can revisit the
+          # explanation given to the maintainer.
+          echo "===== runner system zlib evidence ====="
+          dpkg -l zlib1g-dev | tail -1 || { echo "FAIL: zlib1g-dev not installed"; exit 1; }
+          echo "system pkg-config files for zlib:"
+          ls -1 /usr/lib/x86_64-linux-gnu/pkgconfig/zlib.pc /usr/lib/pkgconfig/zlib.pc 2>/dev/null || true
+          system_cflags=$(env -u PKG_CONFIG_PATH pkg-config --cflags zlib 2>&1 || true)
+          system_libs=$(env -u PKG_CONFIG_PATH   pkg-config --libs   zlib 2>&1 || true)
+          echo "without PKG_CONFIG_PATH:"
+          echo "  --cflags: $system_cflags"
+          echo "  --libs:   $system_libs"
+          if echo "$system_cflags $system_libs" | grep -qE '/nix/store'; then
+            echo "FAIL: expected pkg-config to resolve to /usr without PKG_CONFIG_PATH, but it resolved to a nix-store path."
+            exit 1
+          fi
+          our_cflags=$(pkg-config --cflags zlib)
+          our_libs=$(pkg-config --libs   zlib)
+          echo "with our PKG_CONFIG_PATH:"
+          echo "  --cflags: $our_cflags"
+          echo "  --libs:   $our_libs"
+          if ! echo "$our_cflags $our_libs" | grep -qE '/nix/store'; then
+            echo "FAIL: expected pkg-config to resolve to /nix/store with our PKG_CONFIG_PATH, but it didn't."
+            exit 1
+          fi
+          echo "====================================================="
+
           # Build a throwaway 1-line library that depends on zlib-0.7.1.1
           # via cabal new-build (the same code path the real CI uses), so
           # the probe is linked exactly the way it is in production.
