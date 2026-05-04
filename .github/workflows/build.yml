@@ -96,51 +96,10 @@ jobs:
             ~/.cabal/store
             dist-newstyle
 
-      - name: debug -- inspect dev-shell GHC closure
-        run: |
-          nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash -c '
-            set -x
-            which ghc
-            GHC_LIBDIR=$(ghc --print-libdir)
-            echo "GHC_LIBDIR=$GHC_LIBDIR"
-            echo "--- readelf -d on the real ghc ELF ---"
-            readelf -d "$GHC_LIBDIR"/bin/ghc-* | grep -E "NEEDED|RUNPATH|RPATH" || true
-            echo "--- ldd on the real ghc ELF ---"
-            ldd "$GHC_LIBDIR"/bin/ghc-* 2>&1 | head -40 || true
-            echo "--- env vars relevant to linking ---"
-            env | grep -E "NIX_LDFLAGS|NIX_CFLAGS|LIBRARY_PATH|LD_LIBRARY_PATH|PKG_CONFIG_PATH" || true
-          '
-
       - name: cabal build core
         run: |
           nix develop '.#${{matrix.ghc}}' --print-build-logs --command \
               bash -c 'cabal build amazonka-core amazonka'
-
-      - name: debug -- inspect zlib hsc2hs probe (runs on failure too)
-        if: always()
-        run: |
-          nix develop '.#${{matrix.ghc}}' --print-build-logs --command bash -c '
-            set -x
-            PROBE=$(find dist-newstyle ~/.cabal -name "Stream_hsc_make" 2>/dev/null | head -1)
-            echo "PROBE=$PROBE"
-            if [ -n "$PROBE" ]; then
-              echo "--- file ---"
-              file "$PROBE" || true
-              echo "--- readelf -d ---"
-              readelf -d "$PROBE" | grep -E "NEEDED|RUNPATH|RPATH" || true
-              echo "--- ldd ---"
-              ldd "$PROBE" 2>&1 || true
-              echo "--- attempt to run it ---"
-              "$PROBE" 2>&1 || echo "exit=$?"
-            else
-              echo "no Stream_hsc_make probe found"
-              find dist-newstyle ~/.cabal -name "*.hsc_make" 2>/dev/null || true
-            fi
-            echo "--- linker command line cabal used (if any logs) ---"
-            find dist-newstyle -name "setup-config" -o -name "*.log" 2>/dev/null \
-              | xargs -I{} sh -c "echo === {} ===; cat {}" 2>/dev/null \
-              | grep -E "rpath|RUNPATH|-L/nix|hsc2hs|Stream_hsc" | head -40 || true
-          '
 
       - name: cabal build s3-encryption
         run: |

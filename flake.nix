@@ -64,15 +64,6 @@
             pkgs.gmp
             pkgs.ncurses
             pkgs.zlib
-            # GHC's libraries DT_NEEDED libdw/libelf (elfutils) for stack
-            # traces; elfutils in turn DT_NEEDED libzstd/liblzma/libbz2.
-            # Listing them all in buildInputs makes cc-wrapper add the
-            # corresponding -L/-rpath flags so cabal-built probe binaries
-            # (e.g. zlib's hsc2hs Stream_hsc_make) can be loaded at run time.
-            pkgs.elfutils
-            pkgs.zstd
-            pkgs.bzip2
-            pkgs.xz
 
             # Development Tools
             pkgs.haskellPackages.cabal-fmt
@@ -90,6 +81,26 @@
           shellHook = pre-commit.shellHook + ''
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
+          '' + pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+            # On Linux, pkgs.mkShell's NIX_LDFLAGS only contributes -L
+            # (link-time) flags for buildInputs, not -Wl,-rpath, so
+            # binaries linked inside this shell end up with an empty
+            # DT_RUNPATH and the loader cannot find their nix-store
+            # dependencies at runtime (e.g. cabal's zlib hsc2hs probe
+            # failing with "libzstd.so.1: cannot open"). LD_RUN_PATH is
+            # read by ld and embedded as DT_RUNPATH on each linked
+            # binary, so the loader can walk the chain. macOS uses a
+            # different mechanism (install_name / DYLD) and a different
+            # GHC link chain (no libdw/libelf), so this is Linux-only.
+            export LD_RUN_PATH=${pkgs.lib.makeLibraryPath [
+              pkgs.gmp
+              pkgs.ncurses
+              pkgs.zlib
+              pkgs.elfutils
+              pkgs.zstd
+              pkgs.bzip2
+              pkgs.xz
+            ]}
           '';
         };
 
