@@ -52,7 +52,7 @@
 
         renameVersion = version: "ghc" + (pkgs.lib.replaceStrings [ "." ] [ "" ] version);
 
-        mkDevShell = hsPkgs: pkgs.mkShell {
+        mkDevShell = hsPkgs: pkgs.mkShell ({
           name = "amazonka-${renameVersion hsPkgs.ghc.version}";
 
           buildInputs = [
@@ -81,45 +81,47 @@
           shellHook = pre-commit.shellHook + ''
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
-          '' + pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-            # Why this is needed only when running Nix as a package
-            # manager on a stock Linux distro (e.g. Ubuntu, Fedora) and
-            # NOT on NixOS:
-            #
-            # The Hackage `zlib` package declares `pkgconfig-depends:
-            # zlib`, so Cabal calls `pkg-config --cflags/--libs zlib`
-            # when building it and uses whatever paths pkg-config
-            # returns to compile and link the hsc2hs probe.
-            #
-            # On NixOS there is no /usr/include/zlib.h or
-            # /usr/lib/x86_64-linux-gnu/libz.so on the system, and the
-            # system-wide pkg-config search path is configured to point
-            # at nix-store .pc files. So pkg-config returns nix-store
-            # paths for both cflags and libs, and the probe compiles
-            # and links against a single coherent zlib.
-            #
-            # On a stock distro the system *does* have zlib1g-dev (or
-            # equivalent) installed by apt, with its own zlib.pc on
-            # pkg-config's default search path. pkgs.mkShell does not
-            # reliably propagate buildInputs' .dev outputs into
-            # PKG_CONFIG_PATH the way a real stdenv build does, so
-            # without this export pkg-config finds the system zlib.pc
-            # first. The probe then gets compiled with system zlib.h
-            # but linked against the nix-store libz that cc-wrapper's
-            # NIX_LDFLAGS adds — and any disagreement on the size or
-            # layout of `z_stream` between the two trips glibc's
-            # stack-protector with *** stack smashing detected ***.
-            #
-            # This is also why `ghcWithPackages` would not help: the
-            # mismatch is at the C-level pkg-config layer, not in
-            # GHC's package database. macOS uses install_name / DYLD
-            # and has no equivalent system/nix zlib clash, so this is
-            # Linux-only.
-            export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" [
-              pkgs.zlib.dev
-            ]}
           '';
-        };
+        } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+          # Why PKG_CONFIG_PATH is needed only when running Nix as a
+          # package manager on a stock Linux distro (e.g. Ubuntu,
+          # Fedora) and NOT on NixOS:
+          #
+          # The Hackage `zlib` package declares `pkgconfig-depends:
+          # zlib`, so Cabal calls `pkg-config --cflags/--libs zlib`
+          # when building it and uses whatever paths pkg-config returns
+          # to compile and link the hsc2hs probe.
+          #
+          # On NixOS there is no /usr/include/zlib.h or
+          # /usr/lib/x86_64-linux-gnu/libz.so on the system, and the
+          # system-wide pkg-config search path is configured to point
+          # at nix-store .pc files. So pkg-config returns nix-store
+          # paths for both cflags and libs, and the probe compiles and
+          # links against a single coherent zlib.
+          #
+          # On a stock distro the system *does* have zlib1g-dev (or
+          # equivalent) installed by apt, with its own zlib.pc on
+          # pkg-config's default search path. pkgs.mkShell does not
+          # reliably propagate buildInputs' .dev outputs into
+          # PKG_CONFIG_PATH the way a real stdenv build does, so
+          # without this attribute pkg-config finds the system zlib.pc
+          # first. The probe then gets compiled with system zlib.h but
+          # linked against the nix-store libz that cc-wrapper's
+          # NIX_LDFLAGS adds — and any disagreement on the size or
+          # layout of `z_stream` between the two trips glibc's
+          # stack-protector with *** stack smashing detected ***.
+          #
+          # This is also why `ghcWithPackages` would not help: the
+          # mismatch is at the C-level pkg-config layer, not in GHC's
+          # package database. macOS uses install_name / DYLD and has
+          # no equivalent system/nix zlib clash, so this is
+          # Linux-only.
+          #
+          # mkShell turns any unrecognised attr into a shell env var,
+          # so this is the idiomatic way to set PKG_CONFIG_PATH
+          # (cleaner than exporting it from shellHook).
+          PKG_CONFIG_PATH = pkgs.lib.makeSearchPath "lib/pkgconfig" [ pkgs.zlib.dev ];
+        });
 
         amazonka-gen =
           # Use ghc92 because we want hashable ==1.3.* for actual
