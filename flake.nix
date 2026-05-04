@@ -82,7 +82,7 @@
             export BOTOCORE=${botocore.outPath}
             echo "botocore: $BOTOCORE"
             export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" [ pkgs.zlib.dev ]}
-            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.gmp pkgs.ncurses pkgs.zlib ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.gmp pkgs.ncurses pkgs.zlib ]}
           '';
         };
 
