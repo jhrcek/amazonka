@@ -76,6 +76,16 @@
             pkgs.gh
 
             pkgs.parallel
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+            # On Linux, listing these in buildInputs is empirically required
+            # for cabal's zlib hsc2hs probe to compile to a binary that
+            # doesn't trip glibc's stack-protector canary. Their absence
+            # changes some compile-time flag/setup-hook in a way we haven't
+            # fully diagnosed; restoring them avoids the *** stack smashing
+            # detected *** abort on Ubuntu CI runners.
+            pkgs.zstd
+            pkgs.bzip2
+            pkgs.xz
           ];
 
           shellHook = pre-commit.shellHook + ''
