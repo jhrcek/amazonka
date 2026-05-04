@@ -116,6 +116,10 @@ jobs:
           cd "$WORK"
           cabal get zlib-0.7.1.1 >/dev/null
           cd zlib-0.7.1.1
+          # zlib-0.7.1.1 has build-type: Simple and ships no Setup.hs;
+          # cabal normally synthesises one at install time. Write the
+          # default one ourselves so runghc Setup.hs works.
+          [ -f Setup.hs ] || printf 'import Distribution.Simple\nmain = defaultMain\n' > Setup.hs
 
           run_case () {
             local label=$1 expect=$2 ; shift 2
