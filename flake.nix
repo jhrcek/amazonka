@@ -64,10 +64,15 @@
             pkgs.gmp
             pkgs.ncurses
             pkgs.zlib
-            # Required so that binaries linked through cc-wrapper inside this
-            # shell (e.g. hsc2hs probes) can resolve libdw/libelf, which GHC's
-            # own libraries DT_NEEDED.
+            # GHC's libraries DT_NEEDED libdw/libelf (elfutils) for stack
+            # traces; elfutils in turn DT_NEEDED libzstd/liblzma/libbz2.
+            # Listing them all in buildInputs makes cc-wrapper add the
+            # corresponding -L/-rpath flags so cabal-built probe binaries
+            # (e.g. zlib's hsc2hs Stream_hsc_make) can be loaded at run time.
             pkgs.elfutils
+            pkgs.zstd
+            pkgs.bzip2
+            pkgs.xz
 
             # Development Tools
             pkgs.haskellPackages.cabal-fmt
