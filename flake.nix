@@ -86,27 +86,17 @@
             echo "botocore: $BOTOCORE"
           '' + pkgs.lib.optionalString pkgs.stdenv.isLinux ''
             # pkgs.mkShell does not reliably propagate the .dev outputs of
-            # buildInputs into PKG_CONFIG_PATH, nor does it inject -rpath
-            # entries for the closure into NIX_LDFLAGS. Without these two
-            # exports cabal's zlib hsc2hs probe either compiles against
-            # mismatched headers (causing *** stack smashing detected ***
-            # at run time) or links a binary whose loader cannot find
-            # libzstd.so.1 in the nix store. macOS uses install_name /
-            # DYLD and a different GHC link chain, so this is Linux-only.
+            # buildInputs into PKG_CONFIG_PATH. Without this, cabal's zlib
+            # hsc2hs probe risks compiling against mismatched headers
+            # (system zlib.h vs nix-store libz), tripping glibc's
+            # stack-protector with *** stack smashing detected ***. macOS
+            # has a different GHC link chain and is unaffected.
             export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" [
               pkgs.bzip2.dev
               pkgs.xz.dev
               pkgs.zlib.dev
               pkgs.zstd.dev
             ]}
-            export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
-              pkgs.bzip2
-              pkgs.gmp
-              pkgs.ncurses
-              pkgs.xz
-              pkgs.zlib
-              pkgs.zstd
-            ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
           '';
         };
 

@@ -96,17 +96,16 @@ jobs:
             ~/.cabal/store
             dist-newstyle
 
-      # Verifies that every Linux-only dev-shell change in flake.nix is
-      # individually load-bearing. Builds zlib-0.7.1.1 in-place via its own
-      # Setup.hs (which bypasses cabal's package store, so each case really
-      # re-runs hsc2hs and re-links the probe) under four env mutations:
+      # Verifies that the Linux-only PKG_CONFIG_PATH export in flake.nix is
+      # actually load-bearing. Builds a throwaway library that depends on
+      # zlib-0.7.1.1 via cabal new-build (the same code path the real CI
+      # uses), zapping zlib from the cabal store between cases so each one
+      # genuinely re-runs hsc2hs and re-links the probe. Two cases:
       #   1. full env              -> must succeed
-      #   2. LD_LIBRARY_PATH unset -> must fail (libzstd.so.1 unresolvable)
-      #   3. PKG_CONFIG_PATH unset -> must fail (header/runtime mismatch
+      #   2. PKG_CONFIG_PATH unset -> must fail (header/runtime mismatch
       #                              triggers stack-protector canary)
-      #   4. both unset            -> must fail
-      # If any "must fail" case accidentally succeeds, this step fails the
-      # workflow so we notice the redundancy and can remove the env var.
+      # If case 2 accidentally succeeds, this step fails the workflow so we
+      # notice the redundancy and can remove the export.
       - name: verify dev-shell env vars are each required
         if: runner.os == 'Linux'
         run: |
@@ -169,10 +168,8 @@ jobs:
             fi
           }
 
-          run_case "1. full env (must succeed)"                  ok   env
-          run_case "2. LD_LIBRARY_PATH unset (must fail)"        fail env -u LD_LIBRARY_PATH
-          run_case "3. PKG_CONFIG_PATH unset (must fail)"        fail env -u PKG_CONFIG_PATH
-          run_case "4. both unset (must fail)"                   fail env -u LD_LIBRARY_PATH -u PKG_CONFIG_PATH
+          run_case "1. full env (must succeed)"            ok   env
+          run_case "2. PKG_CONFIG_PATH unset (must fail)"  fail env -u PKG_CONFIG_PATH
           OUTER
 
       - name: cabal build core
